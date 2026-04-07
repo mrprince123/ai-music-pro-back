@@ -72,9 +72,15 @@
                 </div>
             </header>
 
-            <div class="flex justify-center">
+            <!-- Tab Navigation -->
+            <div class="flex justify-center w-full max-w-[1200px] mx-auto border-b border-white/10 mt-2">
+                <button id="nav-library-btn" class="px-8 py-3 font-semibold border-b-[3px] border-indigo-500 text-indigo-400 transition-colors">Library</button>
+                <button id="nav-upload-btn" class="px-8 py-3 font-semibold border-b-[3px] border-transparent text-slate-400 hover:text-slate-200 transition-colors">Publish Track</button>
+            </div>
+
+            <div class="flex justify-center w-full mt-4">
                 <!-- Upload Song Panel -->
-                <div class="glass-panel w-full max-w-[800px] p-6 md:p-10">
+                <div id="upload-panel" class="hidden glass-panel w-full max-w-[800px] p-6 lg:p-10">
                     <div class="mb-8">
                         <h3 class="text-2xl font-bold mb-1">Publish New Release</h3>
                         <p class="text-slate-400 text-sm">Upload a new track to the streaming platform.</p>
@@ -144,8 +150,97 @@
                         </button>
                     </form>
                 </div>
+                
+                <!-- Songs Library Panel -->
+                <div id="library-panel" class="glass-panel w-full max-w-[1400px] p-6 lg:p-10 overflow-hidden flex flex-col min-h-[600px]">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h3 class="text-2xl font-bold mb-1">Songs Library</h3>
+                            <p class="text-slate-400 text-sm">Manage all uploaded tracks.</p>
+                        </div>
+                        <button id="refresh-songs-btn" class="btn-icon bg-slate-800/50 border border-white/10" title="Refresh">
+                            <ion-icon name="refresh"></ion-icon>
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-slate-400 border-b border-white/10">
+                                    <th class="py-3 px-4 font-medium">Cover</th>
+                                    <th class="py-3 px-4 font-medium min-w-[200px]">Title & Artist</th>
+                                    <th class="py-3 px-4 font-medium">Category</th>
+                                    <th class="py-3 px-4 font-medium">Listen</th>
+                                    <th class="py-3 px-4 font-medium text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="songs-list-body" class="divide-y divide-white/5">
+                                <!-- Songs mapped here by JS -->
+                            </tbody>
+                        </table>
+                        <div id="songs-loading" class="hidden py-8 flex-col items-center justify-center text-slate-500">
+                            <div class="loader-spinner mb-3 border-slate-500 border-t-transparent"></div>
+                            <p>Loading songs...</p>
+                        </div>
+                        <div id="songs-empty" class="hidden py-8 flex-col items-center justify-center text-slate-500">
+                            <ion-icon name="musical-notes-outline" class="text-4xl mb-2 text-slate-600"></ion-icon>
+                            <p>No songs found in the library.</p>
+                        </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
+
+        <!-- Edit Song Modal -->
+        <div id="edit-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+            <div class="glass-panel w-full max-w-[600px] p-8 max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold">Edit Track Details</h3>
+                    <button id="close-modal-btn" class="btn-icon">
+                        <ion-icon name="close"></ion-icon>
+                    </button>
+                </div>
+                
+                <form id="edit-form">
+                    <input type="hidden" id="edit-songId">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <label for="edit-songName" class="form-label">Song Title</label>
+                            <input type="text" id="edit-songName" name="songName" required class="glass-input">
+                        </div>
+                        <div>
+                            <label for="edit-singerName" class="form-label">Artist Name</label>
+                            <input type="text" id="edit-singerName" name="singerName" required class="glass-input">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label for="edit-description" class="form-label">Description</label>
+                            <textarea id="edit-description" name="description" rows="2" class="glass-input min-h-[60px]"></textarea>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label for="edit-category" class="form-label">Category / Genre</label>
+                            <select id="edit-category" name="category" required class="glass-input appearance-none">
+                                <option value="pop" class="bg-slate-900">Pop</option>
+                                <option value="electronic" class="bg-slate-900">Electronic</option>
+                                <option value="hip-hop" class="bg-slate-900">Hip Hop</option>
+                                <option value="rock" class="bg-slate-900">Rock</option>
+                                <option value="rnb" class="bg-slate-900">R&B</option>
+                                <option value="lofi" class="bg-slate-900">Lo-Fi</option>
+                                <option value="classical" class="bg-slate-900">Classical</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-lg text-sm text-indigo-300 mb-6 flex items-center gap-2">
+                        <ion-icon name="information-circle"></ion-icon>
+                        <p>To replace audio/thumbnail, please delete and re-upload the entire track instead.</p>
+                    </div>
+                    <div class="flex justify-end gap-3">
+                        <button type="button" id="cancel-edit-btn" class="px-5 py-2 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition">Cancel</button>
+                        <button type="submit" id="save-edit-btn" class="btn-primary py-2 px-6">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </main>
 
     <script src="./js/app.js"></script>

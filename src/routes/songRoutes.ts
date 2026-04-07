@@ -14,6 +14,13 @@ router.post('/upload', protect, uploadLimiter, upload.fields([
     { name: 'thumbnail', maxCount: 1 }
 ]), songController.uploadSong);
 
+router.put('/:id', protect, upload.fields([
+    { name: 'song', maxCount: 1 },
+    { name: 'thumbnail', maxCount: 1 }
+]), songController.updateSong);
+
+router.delete('/:id', protect, songController.deleteSong);
+
 router.get('/stream/:filename', songController.streamSong);
 
 export default router;

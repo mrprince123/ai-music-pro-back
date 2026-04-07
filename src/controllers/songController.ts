@@ -104,3 +104,65 @@ export const streamSong = async (req: Request, res: Response, next: NextFunction
         next(error);
     }
 };
+
+/**
+ * @desc Update song
+ * @route PUT /songs/:id
+ */
+export const updateSong = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const { songName, description, singerName, category } = req.body;
+        const song = await Song.findById(req.params['id']);
+        
+        if (!song) {
+            res.status(404);
+            throw new Error('Song not found');
+        }
+
+        song.songName = songName || song.songName;
+        song.description = description || song.description;
+        song.singerName = singerName || song.singerName;
+        song.category = category || song.category;
+
+        // If new files were uploaded, update the URLs
+        const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+        if (files) {
+            if (files['song']) {
+                // Delete old file if needed
+                if (fs.existsSync(song.songUrl)) fs.unlinkSync(song.songUrl);
+                song.songUrl = files['song'][0]!.path;
+            }
+            if (files['thumbnail']) {
+                if (fs.existsSync(song.thumbnailUrl)) fs.unlinkSync(song.thumbnailUrl);
+                song.thumbnailUrl = files['thumbnail'][0]!.path;
+            }
+        }
+
+        const updatedSong = await song.save();
+        res.status(200).json(updatedSong);
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * @desc Delete song
+ * @route DELETE /songs/:id
+ */
+export const deleteSong = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const song = await Song.findById(req.params['id']);
+        if (!song) {
+            res.status(404);
+            throw new Error('Song not found');
+        }
+
+        if (fs.existsSync(song.songUrl)) fs.unlinkSync(song.songUrl);
+        if (fs.existsSync(song.thumbnailUrl)) fs.unlinkSync(song.thumbnailUrl);
+
+        await song.deleteOne();
+        res.status(200).json({ message: 'Song removed' });
+    } catch (error) {
+        next(error);
+    }
+};
