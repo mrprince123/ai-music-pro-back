@@ -5,7 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "dev:server": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "watch:css": "tailwindcss -i ./public/css/input.css -o ./public/css/style.css --watch",
+    "dev": "concurrently \"npm run dev:server\" \"npm run watch:css\"",
+    "build:css": "tailwindcss -i ./public/css/input.css -o ./public/css/style.css",
     "build": "tsc",
     "start": "node dist/index.js",
     "seed:admin": "ts-node src/scripts/seedAdmin.ts"
@@ -29,6 +32,7 @@
     "uuid": "^13.0.0"
   },
   "devDependencies": {
+    "@tailwindcss/cli": "^4.2.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/compression": "^1.8.1",
     "@types/cors": "^2.8.19",
@@ -40,6 +44,10 @@
     "@types/node": "^25.5.2",
     "@types/socket.io": "^3.0.1",
     "@types/uuid": "^10.0.0",
+    "autoprefixer": "^10.4.27",
+    "concurrently": "^9.2.1",
+    "postcss": "^8.5.8",
+    "tailwindcss": "^4.2.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^6.0.2"
   }

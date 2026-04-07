@@ -37,6 +37,7 @@ app.use(compression());
 
 // Static files
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/admin', express.static(path.join(__dirname, '../public')));
 
 // Routes
 app.use('/songs', songRoutes);
