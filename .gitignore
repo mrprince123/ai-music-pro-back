@@ -10,3 +10,4 @@ dist
 *.swo
 *.swo1
 *.swo2
+.env
