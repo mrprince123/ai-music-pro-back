@@ -16,9 +16,13 @@ const userSchema: Schema = new Schema({
     },
     role: {
         type: String,
-        enum: ['admin'],
-        default: 'admin'
-    }
+        enum: ['admin', 'user'],
+        default: 'user'
+    },
+    favorites: [{
+        type: Schema.Types.ObjectId,
+        ref: 'Song'
+    }]
 }, {
     timestamps: true
 });

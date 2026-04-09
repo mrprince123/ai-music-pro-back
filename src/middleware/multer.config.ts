@@ -1,29 +1,28 @@
 import multer, { FileFilterCallback } from 'multer';
-import path from 'path';
-import fs from 'fs';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
+import cloudinary from '../config/cloudinary';
 import { Request } from 'express';
 
-const songDir = 'uploads/songs';
-const thumbnailDir = 'uploads/thumbnails';
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: async (req: Request, file: Express.Multer.File) => {
+        let folder = 'music-app';
+        let resource_type = 'auto'; 
 
-[songDir, thumbnailDir].forEach(dir => {
-    if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
-    }
-});
-
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
         if (file.fieldname === 'song') {
-            cb(null, songDir);
+            folder = 'music-app/songs';
+            resource_type = 'video'; // Cloudinary handles audio files under the video resource_type flag
         } else if (file.fieldname === 'thumbnail') {
-            cb(null, thumbnailDir);
+            folder = 'music-app/thumbnails';
+            resource_type = 'image';
         }
+
+        return {
+            folder: folder,
+            resource_type: resource_type,
+            public_id: file.fieldname + '-' + Date.now() + '-' + Math.round(Math.random() * 1E9),
+        };
     },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-    }
 });
 
 const fileFilter = (req: Request, file: Express.Multer.File, cb: FileFilterCallback) => {

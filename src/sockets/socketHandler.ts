@@ -5,6 +5,9 @@ import { ServerToClientEvents, ClientToServerEvents } from '../types';
 const socketHandler = (io: Server<ClientToServerEvents, ServerToClientEvents>) => {
     io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>) => {
         console.log(`User connected: ${socket.id}`);
+        
+        // Broadcast server time for Android offset calculations
+        (socket as any).emit('server_time', { serverTime: roomService.getServerTime() });
 
         socket.on('create_room', () => {
             try {

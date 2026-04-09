@@ -12,6 +12,8 @@ import path from 'path';
 import connectDB from './config/db';
 import songRoutes from './routes/songRoutes';
 import authRoutes from './routes/authRoutes';
+import userRoutes from './routes/userRoutes';
+import albumRoutes from './routes/albumRoutes';
 import socketHandler from './sockets/socketHandler';
 import { errorHandler } from './middleware/errorMiddleware';
 import { ClientToServerEvents, ServerToClientEvents } from './types';
@@ -42,6 +44,8 @@ app.use('/admin', express.static(path.join(__dirname, '../public')));
 // Routes
 app.use('/songs', songRoutes);
 app.use('/auth', authRoutes);
+app.use('/users', userRoutes);
+app.use('/albums', albumRoutes);
 
 // Health check
 app.get('/', (req: Request, res: Response) => {

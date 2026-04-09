@@ -3,6 +3,7 @@ import Song from '../models/Song';
 import { streamFile } from '../services/streamService';
 import path from 'path';
 import fs from 'fs';
+import cloudinary from '../config/cloudinary';
 
 /**
  * @desc Get all songs with pagination and category filter
@@ -94,6 +95,14 @@ export const streamSong = async (req: Request, res: Response, next: NextFunction
             res.status(400);
             throw new Error('Filename is required');
         }
+        // If the filename starts with 'http', redirect to it
+        const regexPattern = String(filename);
+        const song = await Song.findOne({ songUrl: { $regex: regexPattern, $options: 'i' } });
+        if (song && song.songUrl.startsWith('http')) {
+            res.redirect(song.songUrl);
+            return;
+        }
+
         const filePath = path.join(__dirname, '../../uploads/songs', filename as string);
         if (!fs.existsSync(filePath)) {
             res.status(404);
@@ -126,14 +135,39 @@ export const updateSong = async (req: Request, res: Response, next: NextFunction
 
         // If new files were uploaded, update the URLs
         const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+        
+        const deleteCloudinaryAsset = async (url: string, resourceType: 'image' | 'video') => {
+            if (!url.startsWith('http')) return;
+            // extract 'music-app/songs/...id' from 'https://res.cloudinary.com/.../upload/v1/.../music-app/songs/someid.mp3'
+            try {
+                const parts = url.split('/');
+                const filenameWithExt = parts.pop();
+                const folder2 = parts.pop();
+                const folder1 = parts.pop();
+                if (filenameWithExt && folder1 && folder2) {
+                    const publicId = `${folder1}/${folder2}/${filenameWithExt.split('.')[0]}`;
+                    await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+                }
+            } catch (err) {
+                console.error('Error deleting old cloudinary asset:', err);
+            }
+        };
+
         if (files) {
             if (files['song']) {
-                // Delete old file if needed
-                if (fs.existsSync(song.songUrl)) fs.unlinkSync(song.songUrl);
+                if (song.songUrl.startsWith('http')) {
+                    await deleteCloudinaryAsset(song.songUrl, 'video');
+                } else if (fs.existsSync(song.songUrl)) {
+                    fs.unlinkSync(song.songUrl);
+                }
                 song.songUrl = files['song'][0]!.path;
             }
             if (files['thumbnail']) {
-                if (fs.existsSync(song.thumbnailUrl)) fs.unlinkSync(song.thumbnailUrl);
+                if (song.thumbnailUrl.startsWith('http')) {
+                    await deleteCloudinaryAsset(song.thumbnailUrl, 'image');
+                } else if (fs.existsSync(song.thumbnailUrl)) {
+                    fs.unlinkSync(song.thumbnailUrl);
+                }
                 song.thumbnailUrl = files['thumbnail'][0]!.path;
             }
         }
@@ -157,8 +191,33 @@ export const deleteSong = async (req: Request, res: Response, next: NextFunction
             throw new Error('Song not found');
         }
 
-        if (fs.existsSync(song.songUrl)) fs.unlinkSync(song.songUrl);
-        if (fs.existsSync(song.thumbnailUrl)) fs.unlinkSync(song.thumbnailUrl);
+        const deleteCloudinaryAsset = async (url: string, resourceType: 'image' | 'video') => {
+            if (!url.startsWith('http')) return;
+            try {
+                const parts = url.split('/');
+                const filenameWithExt = parts.pop();
+                const folder2 = parts.pop();
+                const folder1 = parts.pop();
+                if (filenameWithExt && folder1 && folder2) {
+                    const publicId = `${folder1}/${folder2}/${filenameWithExt.split('.')[0]}`;
+                    await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+                }
+            } catch (err) {
+                console.error('Error deleting old cloudinary asset:', err);
+            }
+        };
+
+        if (song.songUrl.startsWith('http')) {
+            await deleteCloudinaryAsset(song.songUrl, 'video');
+        } else if (fs.existsSync(song.songUrl)) {
+            fs.unlinkSync(song.songUrl);
+        }
+        
+        if (song.thumbnailUrl.startsWith('http')) {
+            await deleteCloudinaryAsset(song.thumbnailUrl, 'image');
+        } else if (fs.existsSync(song.thumbnailUrl)) {
+            fs.unlinkSync(song.thumbnailUrl);
+        }
 
         await song.deleteOne();
         res.status(200).json({ message: 'Song removed' });

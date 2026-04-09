@@ -4,7 +4,7 @@ import { IRoom } from '../types';
 // Mock room storage
 const rooms = new Map<string, IRoom>();
 
-const MAX_USERS = 5;
+const MAX_USERS = 10;
 
 export const createRoom = (hostId: string): IRoom => {
     const roomId = uuidv4().substring(0, 8);
@@ -21,6 +21,8 @@ export const createRoom = (hostId: string): IRoom => {
     rooms.set(roomId, room);
     return room;
 };
+
+export const getServerTime = () => Date.now();
 
 export const getRoom = (roomId: string): IRoom | undefined => rooms.get(roomId);
 

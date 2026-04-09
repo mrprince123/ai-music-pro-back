@@ -7,6 +7,8 @@ export interface ISong extends Document {
     songUrl: string;
     singerName: string;
     category: string;
+    length: number;
+    playCount: number;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -14,8 +16,19 @@ export interface ISong extends Document {
 export interface IUser extends Document {
     email: string;
     password: string;
-    role: 'admin';
+    role: 'admin' | 'user';
+    favorites: string[];
     matchPassword: (password: string) => Promise<boolean>;
+}
+
+export interface IAlbum extends Document {
+    title: string;
+    coverImage?: string;
+    userId: string;
+    songs: string[];
+    isPublic: boolean;
+    createdAt: Date;
+    updatedAt: Date;
 }
 
 export interface IPlaybackState {
