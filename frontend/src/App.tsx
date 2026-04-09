@@ -41,11 +41,11 @@ function Login() {
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
       <div className="glassmorphism p-8 rounded-2xl w-full max-w-md border border-slate-700">
         <div className="text-center mb-8">
-          <div className="bg-indigo-500/20 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-indigo-500/30">
-            <Music className="text-indigo-400" size={32} />
+          <div className="w-24 h-24 rounded-3xl overflow-hidden flex items-center justify-center mx-auto mb-4 border border-indigo-500/30 shadow-lg shadow-indigo-500/20">
+            <img src="/logo.png" alt="AI Music Pro Logo" className="w-full h-full object-cover" />
           </div>
-          <h1 className="text-2xl font-bold text-white">Admin Portal</h1>
-          <p className="text-slate-400 mt-2">Sign in to manage the platform</p>
+          <h1 className="text-2xl font-bold text-white tracking-widest uppercase">AI Music Pro</h1>
+          <p className="text-slate-400 mt-2 text-sm">Secure Management Console</p>
         </div>
 
         {error && (
@@ -108,9 +108,9 @@ function AdminLayout({ children }: { children: any }) {
     <div className="min-h-screen bg-[#0f172a] text-slate-200 font-sans flex flex-col md:flex-row">
       {/* Mobile Topbar */}
       <div className="md:hidden glassmorphism flex justify-between items-center p-4 border-b border-slate-700/50">
-        <div className="flex items-center gap-2">
-            <Music className="text-indigo-400" size={24} />
-            <h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">AdminPanel</h1>
+        <div className="flex items-center gap-3">
+            <img src="/logo.png" alt="Logo" className="w-8 h-8 rounded-lg" />
+            <h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">AI Music Pro</h1>
         </div>
         <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-slate-300">
             {mobileMenuOpen ? <X size={28}/> : <Menu size={28}/>}
@@ -120,13 +120,16 @@ function AdminLayout({ children }: { children: any }) {
       {/* Sidebar */}
       <aside className={`${mobileMenuOpen ? 'flex' : 'hidden'} md:flex w-full md:w-64 glassmorphism border-r border-slate-700/50 p-6 flex-col justify-between absolute md:relative z-40 min-h-screen md:min-h-full`}>
         <div>
-          <div className="hidden md:flex items-center gap-3 mb-8 px-2">
-            <div className="bg-indigo-500/20 p-2 rounded-xl">
-              <Music className="text-indigo-400" size={24} />
+          <div className="hidden md:flex items-center gap-3 mb-10 px-2">
+            <div className="bg-indigo-500/10 p-1.5 rounded-xl border border-white/5 shadow-inner">
+              <img src="/logo.png" alt="AI Music Pro" className="w-10 h-10 rounded-lg shadow-2xl" />
             </div>
-            <h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
-              AdminPanel
-            </h1>
+            <div className="flex flex-col">
+              <h1 className="text-xl font-black bg-gradient-to-r from-white via-indigo-200 to-slate-400 bg-clip-text text-transparent tracking-tighter">
+                AI MUSIC PRO
+              </h1>
+              <span className="text-[10px] text-indigo-400 font-bold tracking-widest -mt-1 uppercase">Cloud Admin</span>
+            </div>
           </div>
           <nav className="flex flex-col gap-2 relative">
             <Link to="/" onClick={() => setMobileMenuOpen(false)} className={navLinkClass('/')}>
