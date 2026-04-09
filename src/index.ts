@@ -14,6 +14,8 @@ import songRoutes from './routes/songRoutes';
 import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes';
 import albumRoutes from './routes/albumRoutes';
+import categoryRoutes from './routes/categoryRoutes';
+import analyticsRoutes from './routes/analyticsRoutes';
 import socketHandler from './sockets/socketHandler';
 import { errorHandler } from './middleware/errorMiddleware';
 import { ClientToServerEvents, ServerToClientEvents } from './types';
@@ -37,15 +39,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(compression());
 
-// Static files
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
-app.use('/admin', express.static(path.join(__dirname, '../public')));
+// Static files handling (Removed since Frontend is now managed by Native Vite Server)
+// app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Routes
 app.use('/songs', songRoutes);
 app.use('/auth', authRoutes);
 app.use('/users', userRoutes);
 app.use('/albums', albumRoutes);
+app.use('/categories', categoryRoutes);
+app.use('/analytics', analyticsRoutes);
 
 // Health check
 app.get('/', (req: Request, res: Response) => {
