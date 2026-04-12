@@ -34,7 +34,7 @@
     "multer-storage-cloudinary": "^4.0.0",
     "react-router-dom": "^7.14.0",
     "socket.io": "^4.8.3",
-    "uuid": "^13.0.0"
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.2.2",
@@ -48,7 +48,7 @@
     "@types/multer": "^2.1.0",
     "@types/node": "^25.5.2",
     "@types/socket.io": "^3.0.1",
-    "@types/uuid": "^10.0.0",
+    "@types/uuid": "^9.0.0",
     "autoprefixer": "^10.4.27",
     "concurrently": "^9.2.1",
     "postcss": "^8.5.9",
