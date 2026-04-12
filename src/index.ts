@@ -12,6 +12,11 @@ import path from 'path';
 import connectDB from './config/db';
 import songRoutes from './routes/songRoutes';
 import authRoutes from './routes/authRoutes';
+import userRoutes from './routes/userRoutes';
+import albumRoutes from './routes/albumRoutes';
+import categoryRoutes from './routes/categoryRoutes';
+import analyticsRoutes from './routes/analyticsRoutes';
+import carouselRoutes from './routes/carouselRoutes';
 import socketHandler from './sockets/socketHandler';
 import { errorHandler } from './middleware/errorMiddleware';
 import { ClientToServerEvents, ServerToClientEvents } from './types';
@@ -25,8 +30,10 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents>(server, {
     cors: {
         origin: '*',
         methods: ['GET', 'POST']
-    }
+    },
+    allowEIO3: true // Support for older socket.io clients (Android)
 });
+
 
 // Middleware
 app.use(cors());
@@ -35,13 +42,18 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(compression());
 
-// Static files
+// Static files handling
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
-app.use('/admin', express.static(path.join(__dirname, '../public')));
+
 
 // Routes
 app.use('/songs', songRoutes);
 app.use('/auth', authRoutes);
+app.use('/users', userRoutes);
+app.use('/albums', albumRoutes);
+app.use('/categories', categoryRoutes);
+app.use('/analytics', analyticsRoutes);
+app.use('/carousel', carouselRoutes);
 
 // Health check
 app.get('/', (req: Request, res: Response) => {

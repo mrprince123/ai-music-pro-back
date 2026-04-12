@@ -28,6 +28,14 @@ const songSchema: Schema = new Schema({
         type: String,
         required: [true, 'Category is required'],
         index: true
+    },
+    length: {
+        type: Number,
+        default: 0
+    },
+    playCount: {
+        type: Number,
+        default: 0
     }
 }, {
     timestamps: true
