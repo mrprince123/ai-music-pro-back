@@ -20,7 +20,7 @@ const getUserProfile = async (userId: string): Promise<IUserProfile | null> => {
     const user = await User.findById(userId);
     if (!user) return null;
     return {
-        _id: user._id as string,
+        _id: user._id.toString(),
         name: user.name,
         profilePhoto: user.profilePhoto
     };
