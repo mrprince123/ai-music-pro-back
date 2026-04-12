@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Link, Navigate, useNavigate, useLocation } from 'react-router-dom';
-import { Home, Music, LayoutDashboard, Settings, LogOut, Loader2, Upload, Menu, X, BarChart3, Tags, PlayCircle, AlertTriangle } from 'lucide-react';
+import { Home, Music, LayoutDashboard, Settings, LogOut, Loader2, Upload, Menu, X, BarChart3, Tags, PlayCircle, AlertTriangle, Image as ImageIcon, Trash2, Plus } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
@@ -143,6 +143,9 @@ function AdminLayout({ children }: { children: any }) {
             </Link>
             <Link to="/analytics" onClick={() => setMobileMenuOpen(false)} className={navLinkClass('/analytics')}>
               <BarChart3 size={20} /> Analytics
+            </Link>
+            <Link to="/carousels" onClick={() => setMobileMenuOpen(false)} className={navLinkClass('/carousels')}>
+              <ImageIcon size={20} /> Promotion Banners
             </Link>
           </nav>
         </div>
@@ -329,7 +332,7 @@ function Dashboard() {
               </div>
               <div>
                 <label className="text-sm text-slate-400 mb-1 block">Description</label>
-                <textarea name="description" defaultValue={editingSong.description} className="w-full bg-[#1e293b] border border-slate-700 rounded-xl px-4 py-3 text-white outline-none h-20 resize-none" />
+                <input name="description" defaultValue={editingSong.description} className="w-full bg-[#1e293b] border border-slate-700 rounded-xl px-4 py-3 text-white outline-none h-20 resize-none" />
               </div>
 
               {/* Media Preview Section */}
@@ -503,7 +506,7 @@ function CategoriesPage() {
                     <input value={desc} onChange={(e)=>setDesc(e.target.value)} type="text" className="w-full bg-[#1e293b] border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-indigo-500" placeholder="Optional..."/>
                 </div>
                 <button disabled={loading} type="submit" className="bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 text-white font-medium px-8 py-3 rounded-xl shadow-lg transition-all h-[50px]">
-                    Add Header
+                    Add Genre
                 </button>
             </form>
 
@@ -602,8 +605,122 @@ function AnalyticsPage() {
     )
 }
 
+function CarouselPage() {
+    const [carousels, setCarousels] = useState([]);
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [link, setLink] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [actionLoading, setActionLoading] = useState(false);
+
+    const fetchCarousels = async () => {
+        try {
+            const res = await axios.get('/carousel');
+            setCarousels(res.data);
+        } catch (err) {
+            toast.error("Failed to fetch carousels");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleAdd = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!imageFile) {
+            toast.error("Please select an image");
+            return;
+        }
+
+        setActionLoading(true);
+        const formData = new FormData();
+        formData.append('carousel', imageFile);
+        formData.append('link', link);
+
+        try {
+            await axios.post('/carousel', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            toast.success("Banner added successfully");
+            setImageFile(null);
+            setLink('');
+            // Reset file input
+            const fileInput = document.getElementById('carousel-input') as HTMLInputElement;
+            if (fileInput) fileInput.value = '';
+            
+            fetchCarousels();
+        } catch (err) {
+            toast.error("Failed to add banner");
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        try {
+            await axios.delete(`/carousel/${id}`);
+            toast.success("Banner removed");
+            fetchCarousels();
+        } catch (err) {
+            toast.error("Failed to delete banner");
+        }
+    };
+
+    useEffect(() => { fetchCarousels() }, []);
+
+    return (
+        <div className="max-w-5xl mx-auto space-y-8">
+            <header>
+                <h2 className="text-3xl font-bold text-white">Promotion Banners</h2>
+                <p className="text-slate-400 mt-1">Manage dynamic carousels for the mobile application</p>
+            </header>
+
+            <form onSubmit={handleAdd} className="glassmorphism p-6 rounded-2xl border border-slate-700 grid grid-cols-1 md:grid-cols-3 gap-4 items-end shadow-xl">
+                <div className="md:col-span-1">
+                    <label className="text-sm font-medium text-slate-300 mb-2 block">Upload Banner Image</label>
+                    <input 
+                        id="carousel-input"
+                        onChange={(e)=>setImageFile(e.target.files?.[0] || null)} 
+                        required 
+                        type="file" 
+                        accept="image/*"
+                        className="w-full bg-[#1e293b] border border-slate-700 rounded-xl px-4 py-2 text-white outline-none focus:border-indigo-500 file:mr-4 file:py-1 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-500/10 file:text-indigo-400 hover:file:bg-indigo-500/20"
+                    />
+                </div>
+                <div className="md:col-span-1">
+                    <label className="text-sm font-medium text-slate-300 mb-2 block">Action Link (Optional)</label>
+                    <input value={link} onChange={(e)=>setLink(e.target.value)} type="text" className="w-full bg-[#1e293b] border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-indigo-500" placeholder="song_id or external link"/>
+                </div>
+                <button disabled={actionLoading} type="submit" className="bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 text-white font-medium px-8 py-3 rounded-xl shadow-lg transition-all h-[50px] flex items-center justify-center gap-2">
+                    {actionLoading ? <Loader2 size={18} className="animate-spin"/> : <><Plus size={18}/> Add Banner</>}
+                </button>
+            </form>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {loading ? (
+                    <div className="col-span-full flex justify-center py-12"><Loader2 className="animate-spin text-indigo-500" size={32}/></div>
+                ) : carousels.map((item: any) => (
+                    <div key={item._id} className="group relative glassmorphism rounded-2xl border border-slate-700 overflow-hidden shadow-xl hover:border-indigo-500/50 transition-all">
+                        <img src={item.image} alt="Carousel" className="w-full h-40 object-cover" />
+                        <div className="p-4 flex justify-between items-center bg-slate-800/50 backdrop-blur-sm">
+                            <span className="text-xs text-slate-400 truncate max-w-[150px]">{item.link || 'No dynamic link'}</span>
+                            <button onClick={() => handleDelete(item._id)} className="p-2 text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors">
+                                <Trash2 size={18} />
+                            </button>
+                        </div>
+                    </div>
+                ))}
+            </div>
+            
+            {!loading && carousels.length === 0 && (
+                <div className="text-center py-20 text-slate-500">
+                    <ImageIcon size={48} className="mx-auto mb-4 opacity-10" />
+                    <p>No promotional banners configured.</p>
+                </div>
+            )}
+        </div>
+    );
+}
+
 function App() {
-  // Try booting local session
   const storedToken = localStorage.getItem('token');
   if (storedToken) {
     axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
@@ -653,6 +770,14 @@ function App() {
           <ProtectedRoute>
             <AdminLayout>
               <AnalyticsPage />
+            </AdminLayout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/carousels" element={
+          <ProtectedRoute>
+            <AdminLayout>
+              <CarouselPage />
             </AdminLayout>
           </ProtectedRoute>
         } />

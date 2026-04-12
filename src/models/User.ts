@@ -3,6 +3,11 @@ import bcrypt from 'bcryptjs';
 import { IUser } from '../types';
 
 const userSchema: Schema = new Schema({
+    name: {
+        type: String,
+        required: [true, 'Name is required'],
+        trim: true
+    },
     email: {
         type: String,
         required: [true, 'Email is required'],
@@ -12,7 +17,26 @@ const userSchema: Schema = new Schema({
     },
     password: {
         type: String,
-        required: [true, 'Password is required']
+        // Optional because Google/Phone login users won't have a password
+    },
+    profilePhoto: {
+        type: String,
+        default: ''
+    },
+    phoneNumber: {
+        type: String,
+        unique: true,
+        sparse: true // Allows multiple null/undefined values
+    },
+    googleId: {
+        type: String,
+        unique: true,
+        sparse: true
+    },
+    authProvider: {
+        type: String,
+        enum: ['email', 'google', 'phone'],
+        default: 'email'
     },
     role: {
         type: String,

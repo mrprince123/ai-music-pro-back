@@ -4,29 +4,41 @@ import { ServerToClientEvents, ClientToServerEvents } from '../types';
 
 const socketHandler = (io: Server<ClientToServerEvents, ServerToClientEvents>) => {
     io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>) => {
-        console.log(`User connected: ${socket.id}`);
+        // Get userId from auth handshake or fallback to socket.id
+        const userId = socket.handshake.auth.userId || socket.id;
+        console.log(`User connected: ${userId}`);
         
         // Broadcast server time for Android offset calculations
         (socket as any).emit('server_time', { serverTime: roomService.getServerTime() });
 
-        socket.on('create_room', () => {
+        socket.on('create_room', async () => {
             try {
-                const room = roomService.createRoom(socket.id);
+                const room = await roomService.createRoom(userId);
                 socket.join(room.roomId);
                 socket.emit('room_joined', room);
-                console.log(`Room created: ${room.roomId} by user: ${socket.id}`);
+                console.log(`Room created: ${room.roomId} by user: ${userId}`);
             } catch (err: any) {
                 socket.emit('error', { message: err.message });
             }
         });
 
-        socket.on('join_room', (roomId: string) => {
+        socket.on('join_room', async (roomId: string) => {
             try {
-                const room = roomService.joinRoom(roomId, socket.id);
+                const room = await roomService.joinRoom(roomId, userId);
                 socket.join(roomId);
                 socket.emit('room_joined', room);
-                socket.to(roomId).emit('user_joined', { userId: socket.id });
-                console.log(`User ${socket.id} joined room: ${roomId}`);
+                
+                // Find the profile of the joining user to emit to others
+                const profile = room.participants.find(p => p._id === userId);
+                if (profile) {
+                    socket.to(roomId).emit('user_joined', { 
+                        userId: profile._id, 
+                        name: profile.name, 
+                        profilePhoto: profile.profilePhoto 
+                    });
+                }
+                
+                console.log(`User ${userId} joined room: ${roomId}`);
             } catch (err: any) {
                 if (err.message === 'Room is full') {
                     socket.emit('room_full', { roomId });
@@ -39,7 +51,7 @@ const socketHandler = (io: Server<ClientToServerEvents, ServerToClientEvents>) =
         socket.on('play', ({ roomId, currentTime, songId }) => {
             try {
                 const room = roomService.getRoom(roomId);
-                if (room) {
+                if (room && room.hostId === userId) { // Only host controls
                     roomService.updatePlayback(roomId, { isPlaying: true, currentTime, currentSongId: songId });
                     socket.to(roomId).emit('sync_play', { currentTime, songId });
                 }
@@ -51,7 +63,7 @@ const socketHandler = (io: Server<ClientToServerEvents, ServerToClientEvents>) =
         socket.on('pause', ({ roomId, currentTime }) => {
             try {
                 const room = roomService.getRoom(roomId);
-                if (room) {
+                if (room && room.hostId === userId) {
                     roomService.updatePlayback(roomId, { isPlaying: false, currentTime });
                     socket.to(roomId).emit('sync_pause', { currentTime });
                 }
@@ -63,9 +75,74 @@ const socketHandler = (io: Server<ClientToServerEvents, ServerToClientEvents>) =
         socket.on('seek', ({ roomId, currentTime }) => {
             try {
                 const room = roomService.getRoom(roomId);
-                if (room) {
+                if (room && room.hostId === userId) {
                     roomService.updatePlayback(roomId, { currentTime });
                     socket.to(roomId).emit('sync_seek', { currentTime });
+                }
+            } catch (err: any) {
+                socket.emit('error', { message: err.message });
+            }
+        });
+
+        socket.on('request_song', ({ roomId, songId }) => {
+            try {
+                const queue = roomService.addToQueue(roomId, songId);
+                io.to(roomId).emit('queue_updated', { queue });
+            } catch (err: any) {
+                socket.emit('error', { message: err.message });
+            }
+        });
+
+        socket.on('remove_queue_item', ({ roomId, songId }) => {
+            try {
+                const room = roomService.getRoom(roomId);
+                if (room && room.hostId === userId) {
+                    const queue = roomService.removeFromQueue(roomId, songId);
+                    io.to(roomId).emit('queue_updated', { queue });
+                }
+            } catch (err: any) {
+                socket.emit('error', { message: err.message });
+            }
+        });
+
+        socket.on('get_room_state', ({ roomId }) => {
+            try {
+                const room = roomService.getRoom(roomId);
+                if (room) {
+                    socket.emit('room_state', room);
+                }
+            } catch (err: any) {
+                socket.emit('error', { message: err.message });
+            }
+        });
+
+        socket.on('change_song', ({ roomId, songId }) => {
+            try {
+                const room = roomService.getRoom(roomId);
+                if (room && room.hostId === userId) {
+                    roomService.updatePlayback(roomId, { isPlaying: true, currentTime: 0, currentSongId: songId });
+                    io.to(roomId).emit('sync_play', { currentTime: 0, songId });
+                }
+            } catch (err: any) {
+                socket.emit('error', { message: err.message });
+            }
+        });
+
+        socket.on('kick_user', ({ roomId, targetUserId }) => {
+            try {
+                const room = roomService.getRoom(roomId);
+                if (room && room.hostId === userId) {
+                    roomService.leaveRoom(roomId, targetUserId);
+                    io.to(roomId).emit('user_kicked', { userId: targetUserId });
+                    
+                    // Force the kicked user's socket to leave the room
+                    const sockets = io.sockets.sockets;
+                    sockets.forEach((s) => {
+                        const sUserId = s.handshake.auth.userId || s.id;
+                        if (sUserId === targetUserId) {
+                            s.leave(roomId);
+                        }
+                    });
                 }
             } catch (err: any) {
                 socket.emit('error', { message: err.message });
@@ -75,14 +152,14 @@ const socketHandler = (io: Server<ClientToServerEvents, ServerToClientEvents>) =
         socket.on('disconnecting', () => {
             socket.rooms.forEach(roomId => {
                 if (roomId !== socket.id) {
-                    roomService.leaveRoom(roomId, socket.id);
-                    socket.to(roomId).emit('user_left', { userId: socket.id });
+                    roomService.leaveRoom(roomId, userId);
+                    socket.to(roomId).emit('user_left', { userId });
                 }
             });
         });
 
         socket.on('disconnect', () => {
-            console.log(`User disconnected: ${socket.id}`);
+            console.log(`User disconnected: ${userId}`);
         });
     });
 };

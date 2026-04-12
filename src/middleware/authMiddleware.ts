@@ -28,11 +28,6 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
                 return next(new Error('Not authorized, user not found'));
             }
 
-            if (user.role !== 'admin') {
-                res.status(403);
-                return next(new Error('Not authorized, admin access only'));
-            }
-
             req.user = user;
             next();
         } catch (error) {
@@ -45,3 +40,13 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
         next(new Error('Not authorized, no token'));
     }
 };
+
+export const admin = (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (req.user && req.user.role === 'admin') {
+        next();
+    } else {
+        res.status(403);
+        next(new Error('Not authorized as an admin'));
+    }
+};
+

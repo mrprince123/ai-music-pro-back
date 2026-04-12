@@ -15,6 +15,9 @@ const storage = new CloudinaryStorage({
         } else if (file.fieldname === 'thumbnail') {
             folder = 'music-app/thumbnails';
             resource_type = 'image';
+        } else if (file.fieldname === 'carousel') {
+            folder = 'music-app/carousels';
+            resource_type = 'image';
         }
 
         return {
@@ -32,7 +35,7 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: FileFilterCallb
         } else {
             cb(null, false);
         }
-    } else if (file.fieldname === 'thumbnail') {
+    } else if (file.fieldname === 'thumbnail' || file.fieldname === 'carousel') {
         if (file.mimetype.startsWith('image/')) {
             cb(null, true);
         } else {

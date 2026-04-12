@@ -2,24 +2,25 @@ import express, { Router } from 'express';
 import * as songController from '../controllers/songController';
 import upload from '../middleware/multer.config';
 import { apiLimiter, uploadLimiter } from '../middleware/rateLimit';
-import { protect } from '../middleware/authMiddleware';
+import { protect, admin } from '../middleware/authMiddleware';
 
 const router: Router = express.Router();
 
 router.get('/', apiLimiter, songController.getSongs);
 router.get('/:id', apiLimiter, songController.getSong);
 
-router.post('/upload', protect, uploadLimiter, upload.fields([
+router.post('/upload', protect, admin, uploadLimiter, upload.fields([
     { name: 'song', maxCount: 1 },
     { name: 'thumbnail', maxCount: 1 }
 ]), songController.uploadSong);
 
-router.put('/:id', protect, upload.fields([
+router.put('/:id', protect, admin, upload.fields([
     { name: 'song', maxCount: 1 },
     { name: 'thumbnail', maxCount: 1 }
 ]), songController.updateSong);
 
-router.delete('/:id', protect, songController.deleteSong);
+router.delete('/:id', protect, admin, songController.deleteSong);
+
 
 router.get('/stream/:filename', songController.streamSong);
 

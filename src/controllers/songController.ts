@@ -91,24 +91,46 @@ export const uploadSong = async (req: Request, res: Response, next: NextFunction
 export const streamSong = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const filename = req.params['filename'];
-        if (!filename) {
+        if (!filename || typeof filename !== 'string') {
             res.status(400);
-            throw new Error('Filename is required');
+            throw new Error('Valid filename is required');
         }
-        // If the filename starts with 'http', redirect to it
-        const regexPattern = String(filename);
-        const song = await Song.findOne({ songUrl: { $regex: regexPattern, $options: 'i' } });
+
+        // 1. Sanitize filename to prevent path traversal
+        const sanitizedFilename = path.basename(filename);
+
+        // 2. Try to find the song to check if it's a remote URL
+        const song = await Song.findOne({ 
+            songUrl: { $regex: sanitizedFilename, $options: 'i' } 
+        });
+
         if (song && song.songUrl.startsWith('http')) {
             res.redirect(song.songUrl);
             return;
         }
 
-        const filePath = path.join(__dirname, '../../uploads/songs', filename as string);
-        if (!fs.existsSync(filePath)) {
-            res.status(404);
-            throw new Error('File not found');
+        // 3. Serve local file securely
+        // Using common subdirectories if they exist, or base uploads
+        const possiblePaths = [
+            path.join(__dirname, '../../uploads/songs', sanitizedFilename),
+            path.join(__dirname, '../../uploads', sanitizedFilename)
+        ];
+
+        let filePath = '';
+        for (const p of possiblePaths) {
+            if (fs.existsSync(p)) {
+                filePath = p;
+                break;
+            }
         }
+
+        if (!filePath) {
+            res.status(404);
+            throw new Error('Song file not found');
+        }
+
         streamFile(filePath, req, res);
+
     } catch (error) {
         next(error);
     }
