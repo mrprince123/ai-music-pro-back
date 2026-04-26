@@ -57,7 +57,7 @@ export const getSong = async (req: Request, res: Response, next: NextFunction): 
  */
 export const uploadSong = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const { songName, description, singerName, category } = req.body;
+        const { songName, description, singerName, category, lyrics } = req.body;
         
         const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
         
@@ -74,6 +74,7 @@ export const uploadSong = async (req: Request, res: Response, next: NextFunction
             description,
             singerName,
             category,
+            lyrics,
             songUrl: songFile.path,
             thumbnailUrl: thumbnailFile.path,
         });
@@ -142,7 +143,7 @@ export const streamSong = async (req: Request, res: Response, next: NextFunction
  */
 export const updateSong = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const { songName, description, singerName, category } = req.body;
+        const { songName, description, singerName, category, lyrics } = req.body;
         const song = await Song.findById(req.params['id']);
         
         if (!song) {
@@ -154,6 +155,7 @@ export const updateSong = async (req: Request, res: Response, next: NextFunction
         song.description = description || song.description;
         song.singerName = singerName || song.singerName;
         song.category = category || song.category;
+        song.lyrics = lyrics !== undefined ? lyrics : song.lyrics;
 
         // If new files were uploaded, update the URLs
         const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;

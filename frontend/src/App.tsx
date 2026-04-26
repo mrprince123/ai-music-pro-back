@@ -334,6 +334,10 @@ function Dashboard() {
                 <label className="text-sm text-slate-400 mb-1 block">Description</label>
                 <input name="description" defaultValue={editingSong.description} className="w-full bg-[#1e293b] border border-slate-700 rounded-xl px-4 py-3 text-white outline-none h-20 resize-none" />
               </div>
+              <div>
+                <label className="text-sm text-slate-400 mb-1 block">Lyrics</label>
+                <textarea name="lyrics" defaultValue={editingSong.lyrics} className="w-full bg-[#1e293b] border border-slate-700 rounded-xl px-4 py-3 text-white outline-none h-32 resize-none" placeholder="Enter song lyrics..."/>
+              </div>
 
               {/* Media Preview Section */}
               <div className="flex gap-4 p-4 border border-slate-700/50 rounded-xl bg-slate-800/30">
@@ -426,6 +430,11 @@ function UploadPage() {
                 <div>
                     <label className="text-sm font-medium text-slate-300 mb-2 block">Description (Optional)</label>
                     <textarea name="description" className="w-full bg-[#1e293b] border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-indigo-500 resize-none h-24" placeholder="Write a short description about this track..."/>
+                </div>
+
+                <div>
+                    <label className="text-sm font-medium text-slate-300 mb-2 block">Lyrics (Optional)</label>
+                    <textarea name="lyrics" className="w-full bg-[#1e293b] border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-indigo-500 resize-none h-32" placeholder="Paste song lyrics here..."/>
                 </div>
 
                 <div className="grid grid-cols-2 gap-6 p-6 bg-slate-800/30 rounded-xl border border-slate-700/50 border-dashed">

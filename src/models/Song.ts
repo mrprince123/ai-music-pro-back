@@ -36,6 +36,10 @@ const songSchema: Schema = new Schema({
     playCount: {
         type: Number,
         default: 0
+    },
+    lyrics: {
+        type: String,
+        trim: true
     }
 }, {
     timestamps: true

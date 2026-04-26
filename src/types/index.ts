@@ -9,6 +9,7 @@ export interface ISong extends Document {
     category: string;
     length: number;
     playCount: number;
+    lyrics?: string;
     createdAt: Date;
     updatedAt: Date;
 }
